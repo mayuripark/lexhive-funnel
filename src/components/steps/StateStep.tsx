@@ -23,8 +23,8 @@ export default function StateStep({ onSubmit }: Props) {
           Select a state
         </option>
         {US_STATES.map((s) => (
-          <option key={s} value={s}>
-            {s}
+          <option key={s.code} value={s.code}>
+            {s.name}
           </option>
         ))}
       </select>
