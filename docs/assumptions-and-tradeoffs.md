@@ -1,57 +1,54 @@
 # Assumptions, trade-offs, and what I added
 
 ## Assumptions
-- The reference funnel only asks one age question; I inferred a realistic
-  3-question qualification gate (age, work status, condition duration)
-  since a real SSD/Mass Tort intake funnel needs more than one signal to
-  produce a meaningfully different `qualified` flag for lead scoring.
-- No design system or brand guide was given, so I designed a distinct
-  visual direction (deep green/parchment, serif headlines) rather than a
-  generic template look.
-- My personal Meta ad account has an advertising access restriction that
-  blocks creating a Pixel. I flagged this with LexHive; their team
-  confirmed a test Pixel/CAPI token would not be provided and that
-  showing the event land in Meta itself isn't required — just the
-  correct payload. I verified the integration by pointing
-  `META_CAPI_ENDPOINT_OVERRIDE` at a request inspector (webhook.site)
-  instead of Meta's real Graph API endpoint — same code path, same
-  hashed payload, different destination. The Loom shows the resulting
-  request: shared `event_id`, hashed `em`/`ph`, `fbp`/`fbc`, event_time,
-  etc. Swapping back to a real pixel later is a one-line env var change.
-- No live n8n/Airtable accounts were available to me while building,
-  so the automation layer is delivered as an importable, documented
-  workflow rather than a live-tested one. I've flagged this explicitly
-  rather than claiming it's been round-tripped.
-- Restricted states (CA, NY as placeholders) are flagged for manual
-  review rather than silently dropped — assumed the business would rather
-  a human glance at a restricted-state lead than lose it outright, but
-  this is a real trade-off worth a two-minute conversation with legal/compliance.
+- The reference funnel asks one age question; I inferred a 3-question
+  qualification gate (age, work status, condition duration) since real
+  SSD/Mass Tort intake needs more than one signal for a meaningful
+  `qualified` flag.
+- No design system was given, so I designed a distinct visual direction
+  (deep green/parchment, serif headlines) rather than a generic template.
+- My personal Meta ad account has an advertising restriction blocking
+  Pixel creation. LexHive confirmed test Meta credentials wouldn't be
+  provided and that landing the event in Meta itself isn't required —
+  just the correct payload. I verified via `META_CAPI_ENDPOINT_OVERRIDE`
+  pointed at a request inspector (webhook.site): same code path, same
+  hashed payload, different destination. One env var swap restores the
+  real Graph API endpoint.
+- The n8n/Airtable pieces were built and live-tested against real
+  accounts, not just documented: 10 successful executions, covering both
+  the create path and the dedup/update path (repeat email → Touch Count
+  increments instead of a duplicate row).
+- Restricted states (placeholders) are flagged for manual review rather
+  than dropped — a real business/compliance call worth a follow-up
+  conversation, not something I should decide unilaterally.
 
 ## Trade-offs
-- **Dedup key:** I used the shared `event_id` (generated client-side) as
-  the primary dedup key across Meta, Airtable, and the retry queue,
-  falling back to email for the Airtable search. This is simple and
-  correct for the common case but wouldn't catch a lead who submits twice
-  with two different emails — solving that properly needs phone-based
-  fuzzy matching, which felt out of scope for 6-8 hours.
+- **Dedup key:** shared `event_id` (client-generated) as primary key,
+  falling back to email for the Airtable search. Correct for the common
+  case; wouldn't catch one person using two different emails — proper
+  fuzzy phone-matching felt out of scope for 6-8 hours.
 - **Resilience is 3-layered, not infinite:** client retries once + queues
-  in localStorage; the server tries Meta and n8n independently via
-  `Promise.allSettled` so one failing doesn't block the other; n8n itself
-  has a workflow-level error handler that logs to Airtable and pings
-  Slack. I did not build a dead-letter queue or automatic replay — a
-  failed lead is *visible and recoverable* by a human, not
-  self-healing. For a first version that felt like the right stopping point.
-- **No bot/spam protection** (honeypot field, rate limiting) — flagged as
-  a gap rather than silently omitted, since a live paid funnel would need it.
-- **State list is a placeholder.** In production this would live in
-  Airtable (or an env var) so compliance can update it without a redeploy.
+  in localStorage; server tries Meta and n8n independently
+  (`Promise.allSettled`) so one failing doesn't block the other; n8n logs
+  every failure to an Airtable table. No dead-letter replay or chat alert
+  on top — failures are *visible and recoverable* by a human, not
+  self-healing.
+- **No bot/spam protection** — flagged as a gap a live paid funnel would need.
+- **State list is a placeholder** — production would pull this from
+  Airtable/env so compliance can update it without a redeploy.
+
+## A real bug I hit and fixed
+`/api/submit-lead` failed on every call with `ERR_MODULE_NOT_FOUND` post-deploy.
+Cause: `package.json` has `"type": "module"`, so Vercel runs the function as
+native Node ESM, which needs explicit `.js` extensions on relative imports —
+`./lib/metaCapi` compiled fine but failed at runtime; `./lib/metaCapi.js` fixed
+it. Found it by adding a debug field to `/api/health` listing visible env var
+*names* (ruled out a config issue), then checking Vercel's runtime logs directly.
 
 ## What I added beyond the brief
-- A restricted-state routing flag feeding into Airtable's Review Status field.
-- A TCPA-style consent checkbox on the contact step (required to submit).
-- A `/api/health` endpoint for uptime monitoring of the config, not just the server.
-- Client-side localStorage retry queue so a lead never silently vanishes
-  on a bad connection at the worst possible moment — the moment they convert.
-- Separated Meta CAPI failure from n8n/CRM failure in the response, since
-  a tracking miss and a lost lead are different severities and should be
-  handled (and alerted) differently.
+- Restricted-state flag feeding Airtable's Review Status field.
+- A TCPA-style consent checkbox required to submit.
+- A `/api/health` endpoint for uptime/config monitoring.
+- Client-side localStorage retry queue so a lead never silently vanishes.
+- Meta CAPI failure and n8n/CRM failure handled and reported separately,
+  since a tracking miss and a lost lead are different severities.
