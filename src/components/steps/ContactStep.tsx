@@ -14,8 +14,8 @@ interface Props {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Accepts common US formats: 5551234567, 555-123-4567, (555) 123-4567
-const PHONE_RE = /^\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/;
+// Requires the +91 country code, e.g. +91 98765 43210, +919876543210, +91-98765-43210
+const PHONE_RE = /^\+91[\s-]?\d{5}[\s-]?\d{5}$/;
 
 export default function ContactStep({ submitting, onSubmit }: Props) {
   const [values, setValues] = useState<ContactValues>({
