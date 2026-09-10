@@ -28,19 +28,17 @@ event quality is where I focused the most attention."
 
 *(Switch to DevTools, click the submit-lead request.)*
 
-"Here's the request my funnel sent to the backend. This eventId field
-is shared between the Meta Pixel firing in the browser and the Meta
-Conversions API call firing on the server — that's what lets Meta
-collapse both signals into one counted conversion instead of
-double-counting, which directly affects match quality and reporting
-accuracy.
+"Here's the request my funnel sent to the backend. This eventId is
+shared between the Meta Pixel firing in the browser and the Conversions
+API call firing on the server — that's what lets Meta collapse both
+into one counted conversion instead of double-counting, which affects
+match quality and reporting accuracy.
 
-One note on my process here: my personal Meta ad account has an
-advertising restriction, so I didn't have a live test pixel. Rather than
-guess or fake it, I raised it directly with LexHive — they confirmed
-they wouldn't provide test credentials, and that proving the payload
-itself was correct was enough. So I built in a way to verify the exact
-same code path against a request inspector instead."
+One note: my personal Meta ad account has an advertising restriction,
+so I didn't have a live test pixel. I raised it directly with LexHive —
+they confirmed test credentials wouldn't be provided, and that proving
+the payload itself was correct was enough. So I built a way to verify
+the exact same code path against a request inspector instead."
 
 *(Switch to webhook.site, refresh.)*
 
@@ -59,10 +57,10 @@ nothing structural."
 *(Switch to n8n, open the workflow.)*
 
 "A webhook receives the lead, checks a shared secret, then this Code
-node validates and normalizes the data — it fails loudly on bad input
-rather than passing along a broken record. Then it searches Airtable
-by email and branches: existing lead gets updated, new lead gets
-created. That's the dedup logic that keeps this reliable at volume."
+node validates and normalizes the data — failing loudly on bad input
+rather than passing along a broken record. Then it searches Airtable by
+email and branches: existing lead gets updated, new lead gets created.
+That's the dedup logic that keeps this reliable at volume."
 
 *(Click into the most recent execution.)*
 
@@ -105,6 +103,11 @@ signals are less clear-cut than age, and I'd rather the business see a
 borderline lead and decide, than have the funnel silently drop someone
 still worth a conversation. That's the kind of trade-off I tried to
 make throughout — practical, not just correct on paper.
+
+One more thing worth mentioning: I used AI throughout this build, but
+efficiently — validating configs before deploying, and when something
+did break, diagnosing it from real logs instead of guessing. That's
+what let me move fast without sacrificing accuracy.
 
 With another day, I'd add a dead-letter replay for failed leads and
 basic bot protection on the form. Thanks for watching."
