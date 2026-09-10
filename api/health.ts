@@ -12,5 +12,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     n8nConfigured: Boolean(process.env.N8N_LEAD_WEBHOOK_URL),
   };
   const healthy = Object.values(checks).every(Boolean);
-  res.status(healthy ? 200 : 503).json({ healthy, checks, checkedAt: new Date().toISOString() });
+  // Debug aid: lists which relevant env var NAMES the running function can
+  // actually see (never values) — the fastest way to catch a typo'd key
+  // name without exposing anything sensitive. Remove before final submission.
+  const relevantKeys = Object.keys(process.env).filter(
+    (k) => k.startsWith("META_") || k.startsWith("N8N_") || k.startsWith("VITE_")
+  );
+  res
+    .status(healthy ? 200 : 503)
+    .json({ healthy, checks, presentEnvKeys: relevantKeys, checkedAt: new Date().toISOString() });
 }
