@@ -1,7 +1,7 @@
 export function ThankYouScreen({ submitError }: { submitError: boolean }) {
   return (
     <div className="step end-screen">
-      <h1 className="step-question">
+      <h1 className="step-question end-heading">
         You're all set <span className="end-badge end-badge--success end-badge--inline">✓</span>
       </h1>
       <p className="step-helper">
