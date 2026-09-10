@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sendMetaLeadEvent } from "./lib/metaCapi";
+import { sendMetaLeadEvent } from "./lib/metaCapi.js";
 
 const REQUIRED_FIELDS = ["eventId", "email", "phone", "firstName", "lastName", "state"] as const;
 
