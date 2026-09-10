@@ -1,0 +1,63 @@
+{
+  "name": "LexHive – Automation Error Handler",
+  "nodes": [
+    {
+      "id": "error-trigger",
+      "name": "On Any Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-360, 0],
+      "parameters": {},
+      "notes": "n8n calls this automatically whenever the workflow named in 'errorWorkflow' (set in the main workflow's settings) throws — no manual wiring needed per-node."
+    },
+    {
+      "id": "log-to-airtable",
+      "name": "Log to Automation Logs",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [-120, 0],
+      "parameters": {
+        "operation": "create",
+        "base": { "value": "={{ $env.AIRTABLE_BASE_ID }}" },
+        "table": { "value": "Automation Logs" },
+        "columns": {
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Workflow": "={{ $json.workflow.name }}",
+            "Failed Node": "={{ $json.execution.lastNodeExecuted }}",
+            "Event ID": "={{ $json.execution.data?.resultData?.runData?.['Validate & Normalize']?.[0]?.data?.main?.[0]?.[0]?.json?.eventId || 'unknown' }}",
+            "Error Message": "={{ $json.execution.error?.message || 'unknown error' }}",
+            "Raw Input": "={{ JSON.stringify($json.execution.data?.resultData?.runData?.['Validate & Normalize']?.[0]?.data?.main?.[0]?.[0]?.json || {}) }}",
+            "Resolved": false
+          }
+        }
+      }
+    },
+    {
+      "id": "alert-slack",
+      "name": "Alert #growth-automation",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [120, 0],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": { "value": "={{ $env.SLACK_ALERTS_CHANNEL_ID }}" },
+        "text": "={{ \":rotating_light: Lead automation failure in *\" + $json.workflow.name + \"* at node *\" + $json.execution.lastNodeExecuted + \"*\\n\" + ($json.execution.error?.message || '') + \"\\nLogged to Airtable → Automation Logs.\" }}"
+      }
+    }
+  ],
+  "connections": {
+    "On Any Workflow Error": {
+      "main": [[{ "node": "Log to Automation Logs", "type": "main", "index": 0 }]]
+    },
+    "Log to Automation Logs": {
+      "main": [[{ "node": "Alert #growth-automation", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true
+}

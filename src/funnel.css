@@ -1,0 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #EAE2D2;
+  --ink: #26332B;
+  --ink-soft: #52604F;
+  --accent: #3E6B52;
+  --accent-dark: #2A4B39;
+  --card: #FBF8F0;
+  --line: #D9D0BB;
+  --error: #A63B2E;
+}
+
+.funnel-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(62, 107, 82, 0.10), transparent 42%),
+    var(--bg);
+}
+
+.funnel-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 40px 36px 36px;
+  box-shadow: 0 1px 2px rgba(38, 51, 43, 0.06);
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--line);
+  border-radius: 2px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 320ms ease;
+}
+
+.step-eyebrow {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+
+.step-question {
+  font-family: "Fraunces", serif;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0 0 12px;
+  max-width: 34ch;
+}
+
+.step-helper {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.choice-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.choice-btn,
+.primary-btn {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 14px 22px;
+  border-radius: 5px;
+  border: 1px solid var(--accent-dark);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease;
+}
+.choice-btn:hover,
+.primary-btn:hover {
+  background: var(--accent-dark);
+}
+.choice-btn:active,
+.primary-btn:active {
+  transform: scale(0.98);
+}
+.choice-btn {
+  flex: 1;
+}
+.choice-btn--muted {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+.choice-btn--muted:hover {
+  background: rgba(38, 51, 43, 0.05);
+}
+
+.primary-btn {
+  width: 100%;
+  margin-top: 22px;
+}
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select-field {
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  padding: 13px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.field {
+  flex: 1;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.field input {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  padding: 12px 13px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.field input:focus,
+.select-field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field-error {
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  color: var(--error);
+  margin-top: 4px;
+}
+
+.consent-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.consent-row input {
+  margin-top: 3px;
+}
+
+.offline-note {
+  font-family: "Inter", sans-serif;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  background: rgba(62, 107, 82, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 12px 14px;
+  margin-top: 18px;
+}
+
+.end-screen {
+  text-align: center;
+}
+
+.end-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+.end-badge--success {
+  background: var(--accent);
+}
+
+@media (max-width: 420px) {
+  .funnel-card {
+    padding: 30px 22px;
+  }
+  .step-question {
+    font-size: 24px;
+  }
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
