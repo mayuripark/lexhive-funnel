@@ -1,54 +1,50 @@
 # Assumptions, trade-offs, and what I added
 
+## How I used AI
+I used Claude as my build partner throughout — conversationally, not as
+a single code dump — reviewing and testing at each stage. It scaffolded
+the React funnel, the Vercel API (Meta CAPI hashing/dedup), and the n8n
+workflows (built directly against my real n8n/Airtable accounts via
+their APIs, not just handed to me as files to import). I drove account
+setup, credential attachment, and testing myself, and debugged real
+issues alongside it — a Meta access restriction (resolved by testing
+against webhook.site instead, per LexHive's confirmation that live
+verification wasn't required), and a genuine bug: `/api/submit-lead`
+threw `ERR_MODULE_NOT_FOUND` because my `package.json`'s `"type":
+"module"` requires explicit `.js` extensions on relative imports at
+runtime, even though TypeScript compiles fine without them.
+
 ## Assumptions
-- The reference funnel asks one age question; I inferred a 3-question
+- The reference funnel asks one age question; I used a 3-question
   qualification gate (age, work status, condition duration) since real
   SSD/Mass Tort intake needs more than one signal for a meaningful
   `qualified` flag.
-- No design system was given, so I designed a distinct visual direction
-  (deep green/parchment, serif headlines) rather than a generic template.
-- My personal Meta ad account has an advertising restriction blocking
-  Pixel creation. LexHive confirmed test Meta credentials wouldn't be
-  provided and that landing the event in Meta itself isn't required —
-  just the correct payload. I verified via `META_CAPI_ENDPOINT_OVERRIDE`
-  pointed at a request inspector (webhook.site): same code path, same
-  hashed payload, different destination. One env var swap restores the
-  real Graph API endpoint.
-- The n8n/Airtable pieces were built and live-tested against real
-  accounts, not just documented: 10 successful executions, covering both
-  the create path and the dedup/update path (repeat email → Touch Count
-  increments instead of a duplicate row).
+- No design system was given, so I chose a distinct visual direction
+  (deep green/parchment, serif headlines) over a generic template.
 - Restricted states (placeholders) are flagged for manual review rather
-  than dropped — a real business/compliance call worth a follow-up
-  conversation, not something I should decide unilaterally.
+  than dropped — a compliance call worth a follow-up conversation, not
+  mine to decide unilaterally.
 
 ## Trade-offs
-- **Dedup key:** shared `event_id` (client-generated) as primary key,
-  falling back to email for the Airtable search. Correct for the common
-  case; wouldn't catch one person using two different emails — proper
-  fuzzy phone-matching felt out of scope for 6-8 hours.
-- **Resilience is 3-layered, not infinite:** client retries once + queues
+- **Dedup key:** shared `event_id` as primary key, falling back to email
+  for the Airtable search. Correct for the common case; wouldn't catch
+  one person using two emails — fuzzy phone-matching felt out of scope.
+- **Resilience is layered, not infinite:** client retries once + queues
   in localStorage; server tries Meta and n8n independently
-  (`Promise.allSettled`) so one failing doesn't block the other; n8n logs
-  every failure to an Airtable table. No dead-letter replay or chat alert
-  on top — failures are *visible and recoverable* by a human, not
-  self-healing.
-- **No bot/spam protection** — flagged as a gap a live paid funnel would need.
-- **State list is a placeholder** — production would pull this from
+  (`Promise.allSettled`); n8n logs every failure to Airtable. No
+  dead-letter replay or chat alert — failures are visible and
+  human-recoverable, not self-healing.
+- **No bot/spam protection** — flagged as a gap a live funnel would need.
+- **State list is a placeholder** — production would pull it from
   Airtable/env so compliance can update it without a redeploy.
-
-## A real bug I hit and fixed
-`/api/submit-lead` failed on every call with `ERR_MODULE_NOT_FOUND` post-deploy.
-Cause: `package.json` has `"type": "module"`, so Vercel runs the function as
-native Node ESM, which needs explicit `.js` extensions on relative imports —
-`./lib/metaCapi` compiled fine but failed at runtime; `./lib/metaCapi.js` fixed
-it. Found it by adding a debug field to `/api/health` listing visible env var
-*names* (ruled out a config issue), then checking Vercel's runtime logs directly.
 
 ## What I added beyond the brief
 - Restricted-state flag feeding Airtable's Review Status field.
 - A TCPA-style consent checkbox required to submit.
-- A `/api/health` endpoint for uptime/config monitoring.
+- A `/api/health` endpoint for config/uptime monitoring.
 - Client-side localStorage retry queue so a lead never silently vanishes.
 - Meta CAPI failure and n8n/CRM failure handled and reported separately,
   since a tracking miss and a lost lead are different severities.
+- Live end-to-end verification, not just a working build: 10 successful
+  n8n executions covering both the create path and the dedup/update path
+  (repeat email → Touch Count increments instead of a duplicate row).
