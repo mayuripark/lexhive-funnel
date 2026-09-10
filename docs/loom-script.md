@@ -14,15 +14,15 @@ out the `eventId` in the payload — explain in one sentence that this same
 ID goes to both the Meta Pixel (client) and Meta CAPI (server) so Meta
 dedupes them into one counted conversion instead of two.
 
-**1:15 – 2:00 | Meta Events Manager (or the fallback)**
-If you got real Meta access: switch to Events Manager -> Test Events and
-show the Lead event landing with match quality / matched parameters
-visible.
-If not: say so plainly — "my Meta account has an access restriction, so
-I'm verifying this against a request inspector instead" — then show the
-webhook.site bin receiving the POST from `/api/submit-lead`, and point out
-the hashed `em`/`ph` fields, the shared `event_id`, and `fbp`/`fbc` in the
-payload. This is honest and still proves the code is correct.
+**1:15 – 2:00 | The Meta payload (webhook.site)**
+LexHive confirmed test Meta credentials wouldn't be provided and that
+showing the event land in Meta isn't required — just the correct
+payload shape. So: show the webhook.site bin receiving the POST from
+`/api/submit-lead`, and point out the hashed `em`/`ph` fields, the
+shared `event_id` (same one the client pixel would use), and `fbp`/`fbc`
+in the payload. Mention in one sentence that swapping to a real pixel
+is a one-line env var change (`META_CAPI_ENDPOINT_OVERRIDE` removed,
+real `META_PIXEL_ID`/`META_CAPI_ACCESS_TOKEN` added).
 
 **2:00 – 3:00 | n8n workflow**
 Open n8n, show the `Lead Intake` workflow, walk through: Webhook -> Validate

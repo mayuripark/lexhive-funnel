@@ -9,12 +9,15 @@
   visual direction (deep green/parchment, serif headlines) rather than a
   generic template look.
 - My personal Meta ad account has an advertising access restriction that
-  blocks creating a Pixel, so I couldn't test the CAPI integration against
-  a real pixel. I asked LexHive for test access; if that didn't come
-  through in time, I verified the integration by pointing
+  blocks creating a Pixel. I flagged this with LexHive; their team
+  confirmed a test Pixel/CAPI token would not be provided and that
+  showing the event land in Meta itself isn't required — just the
+  correct payload. I verified the integration by pointing
   `META_CAPI_ENDPOINT_OVERRIDE` at a request inspector (webhook.site)
-  instead — same code path, same hashed payload, different destination.
-  The Loom shows this and explains why.
+  instead of Meta's real Graph API endpoint — same code path, same
+  hashed payload, different destination. The Loom shows the resulting
+  request: shared `event_id`, hashed `em`/`ph`, `fbp`/`fbc`, event_time,
+  etc. Swapping back to a real pixel later is a one-line env var change.
 - No live n8n/Airtable accounts were available to me while building,
   so the automation layer is delivered as an importable, documented
   workflow rather than a live-tested one. I've flagged this explicitly
