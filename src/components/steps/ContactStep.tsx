@@ -85,7 +85,7 @@ export default function ContactStep({ submitting, onSubmit }: Props) {
         <input
           id="phone"
           type="tel"
-          placeholder="(555) 123-4567"
+          placeholder="+91 98765 43210"
           value={values.phone}
           onChange={(e) => setValues((v) => ({ ...v, phone: e.target.value }))}
         />

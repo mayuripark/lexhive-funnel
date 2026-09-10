@@ -138,6 +138,7 @@
 
 .field {
   flex: 1;
+  min-width: 0;
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
