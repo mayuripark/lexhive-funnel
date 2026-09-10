@@ -224,21 +224,10 @@
 .end-badge--success {
   background: var(--accent);
 }
-.end-badge--inline {
-  display: inline-flex;
+.end-badge--big {
   width: 60px;
   height: 60px;
   font-size: 32px;
-  flex-shrink: 0;
-}
-
-.end-heading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 20px;
 }
 
 @media (max-width: 420px) {
