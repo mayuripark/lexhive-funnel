@@ -76,8 +76,24 @@ export default function App() {
     setScreen("thankYou");
   }
 
-  if (screen === "disqualified") return <DisqualifiedScreen />;
-  if (screen === "thankYou") return <ThankYouScreen submitError={submitError} />;
+  if (screen === "disqualified") {
+    return (
+      <div className="funnel-shell">
+        <div className="funnel-card">
+          <DisqualifiedScreen />
+        </div>
+      </div>
+    );
+  }
+  if (screen === "thankYou") {
+    return (
+      <div className="funnel-shell">
+        <div className="funnel-card">
+          <ThankYouScreen submitError={submitError} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="funnel-shell">
