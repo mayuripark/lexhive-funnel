@@ -2,62 +2,179 @@
   "name": "LexHive – Automation Error Handler",
   "nodes": [
     {
-      "id": "error-trigger",
+      "parameters": {},
+      "id": "16216be3-0598-4796-9c4b-809b825e8e23",
       "name": "On Any Workflow Error",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [-360, 0],
-      "parameters": {},
-      "notes": "n8n calls this automatically whenever the workflow named in 'errorWorkflow' (set in the main workflow's settings) throws — no manual wiring needed per-node."
+      "position": [
+        -256,
+        0
+      ]
     },
     {
-      "id": "log-to-airtable",
-      "name": "Log to Automation Logs",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [-120, 0],
       "parameters": {
+        "authentication": "airtableOAuth2Api",
         "operation": "create",
-        "base": { "value": "={{ $env.AIRTABLE_BASE_ID }}" },
-        "table": { "value": "Automation Logs" },
+        "base": {
+          "__rl": true,
+          "mode": "id",
+          "value": "appykHkMnMJUMid2h"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tbllGoknRxPaAwd97"
+        },
         "columns": {
+          "mappingMode": "defineBelow",
           "value": {
             "Timestamp": "={{ $now.toISO() }}",
             "Workflow": "={{ $json.workflow.name }}",
             "Failed Node": "={{ $json.execution.lastNodeExecuted }}",
-            "Event ID": "={{ $json.execution.data?.resultData?.runData?.['Validate & Normalize']?.[0]?.data?.main?.[0]?.[0]?.json?.eventId || 'unknown' }}",
-            "Error Message": "={{ $json.execution.error?.message || 'unknown error' }}",
-            "Raw Input": "={{ JSON.stringify($json.execution.data?.resultData?.runData?.['Validate & Normalize']?.[0]?.data?.main?.[0]?.[0]?.json || {}) }}",
+            "Error Message": "={{ $json.execution.error.message }}",
             "Resolved": false
-          }
-        }
-      }
-    },
-    {
-      "id": "alert-slack",
-      "name": "Alert #growth-automation",
-      "type": "n8n-nodes-base.slack",
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Id",
+              "displayName": "Id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Workflow",
+              "displayName": "Workflow",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Failed Node",
+              "displayName": "Failed Node",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Event ID",
+              "displayName": "Event ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Error Message",
+              "displayName": "Error Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Raw Input",
+              "displayName": "Raw Input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Resolved",
+              "displayName": "Resolved",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e6ab0def-18d3-471c-b8e5-64e87af08833",
+      "name": "Log to Automation Logs",
+      "type": "n8n-nodes-base.airtable",
       "typeVersion": 2.2,
-      "position": [120, 0],
-      "parameters": {
-        "resource": "message",
-        "operation": "post",
-        "select": "channel",
-        "channelId": { "value": "={{ $env.SLACK_ALERTS_CHANNEL_ID }}" },
-        "text": "={{ \":rotating_light: Lead automation failure in *\" + $json.workflow.name + \"* at node *\" + $json.execution.lastNodeExecuted + \"*\\n\" + ($json.execution.error?.message || '') + \"\\nLogged to Airtable → Automation Logs.\" }}"
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Z7SQdwfOH9HddP2O",
+          "name": "Airtable account"
+        }
       }
     }
   ],
+  "pinData": {},
   "connections": {
     "On Any Workflow Error": {
-      "main": [[{ "node": "Log to Automation Logs", "type": "main", "index": 0 }]]
-    },
-    "Log to Automation Logs": {
-      "main": [[{ "node": "Alert #growth-automation", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Log to Automation Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   },
-  "active": true
+  "versionId": "e5178e26-ef42-4b83-a34c-3b1d83c41e4e",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b5e78a3a7e69fc3695b1b90c35f4b3b268f45130475fc1a75a5eaebbc014313"
+  },
+  "nodeGroups": [],
+  "id": "BrB0SlTtkfc9FiXu",
+  "tags": []
 }

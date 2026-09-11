@@ -52,24 +52,26 @@ without needing a real pixel, and it's a one-line env var to swap back to
 the real endpoint once you have access (just unset the override).
 
 **n8n:**
-1. Import `n8n/lead-intake-workflow.json` and
-   `n8n/error-handler-workflow.json` (Workflows -> Import from File).
-2. Add your Airtable and Slack credentials to the respective nodes (the
-   JSON references `$env.AIRTABLE_BASE_ID` / `$env.SLACK_ALERTS_CHANNEL_ID`
-   — set these in n8n's environment variables, or hardcode for a quick test).
-3. Activate both workflows. Copy the production webhook URL from the
-   "Webhook: Lead Intake" node into `N8N_LEAD_WEBHOOK_URL`.
-4. Set `N8N_WEBHOOK_SECRET` to the same value in both n8n and Vercel.
+Both workflows were built directly against a real n8n instance via
+n8n's API (not hand-assembled JSON), with real Airtable table IDs
+wired in, and live-tested end-to-end — 10 successful executions
+covering both the create path and the dedup/update path. See
+`n8n/lead-intake-workflow.json` and
+`n8n/error-handler-workflow.json` for the exact exported configuration,
+including the working Airtable credential reference. To reuse these
+yourself:
+1. Import both files (Workflows -> Import from File).
+2. Attach your own Airtable credential to each Airtable node (the
+   exported JSON references a credential ID that's specific to my
+   instance and won't resolve on yours).
+3. Activate both workflows, then copy the production webhook URL from
+   the "Webhook: Lead Intake" node into `N8N_LEAD_WEBHOOK_URL`.
+4. Set `N8N_WEBHOOK_SECRET` to match the value baked into the
+   "Check Webhook Secret" node.
 
 **Airtable:**
 - See `docs/airtable-schema.md` for the two tables and exact fields.
-
-**Note on the n8n JSON:** I built this without a live n8n instance in this
-environment, so it's structured to match n8n's current export format and
-node parameter shapes, but I haven't round-tripped it through an actual
-import. Treat it as a strong first draft — sanity-check node versions and
-the Airtable node's base/table picker after import, since Airtable node
-parameters have changed shape across recent n8n versions.
+- Live base: linked in my submission email.
 
 ## Project structure
 ```

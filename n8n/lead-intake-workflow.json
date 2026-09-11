@@ -2,191 +2,804 @@
   "name": "LexHive – Lead Intake",
   "nodes": [
     {
-      "id": "webhook-trigger",
-      "name": "Webhook: Lead Intake",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [-400, 0],
       "parameters": {
-        "path": "lead-intake",
         "httpMethod": "POST",
+        "path": "lead-intake",
         "responseMode": "responseNode",
         "options": {}
-      }
+      },
+      "id": "dafeb767-2a88-4fc6-a14f-127fcb054326",
+      "name": "Webhook: Lead Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        0
+      ],
+      "webhookId": "eb0d328f-c58c-41f4-ad6f-fd1ea29029aa"
     },
     {
-      "id": "check-secret",
-      "name": "Check Webhook Secret",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [-160, 0],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
           "conditions": [
             {
               "leftValue": "={{ $json.headers['x-lexhive-webhook-secret'] }}",
-              "rightValue": "={{ $env.N8N_WEBHOOK_SECRET }}",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "lexhive-8f3ac2b9d7e14a06",
+              "id": "d4691c20-51bb-4593-b74a-75de1df3fb5f"
             }
-          ]
-        }
-      }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8d1b60e9-cb7a-42ce-8556-a80af9c0a608",
+      "name": "Check Webhook Secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        0
+      ]
     },
     {
-      "id": "reject-unauthorized",
-      "name": "Respond 401",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [80, 140],
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"error\": \"unauthorized\" } }}",
-        "options": { "responseCode": 401 }
-      }
-    },
-    {
-      "id": "validate-normalize",
+        "jsCode": "const b = $input.first().json.body;\nconst required = ['eventId', 'email', 'phone', 'firstName', 'lastName', 'state'];\nconst missing = required.filter(function(f) { return !b[f]; });\nif (missing.length) {\n  throw new Error('Missing fields from webhook payload: ' + missing.join(', '));\n}\nconst digitsOnly = String(b.phone).replace(/\\D/g, '');\nconst safeUtm = b.utm || {};\nconst eventId = b.eventId;\nconst email = String(b.email).trim().toLowerCase();\nconst searchFormula = \"OR({Event ID} = '\" + eventId + \"', {Email} = '\" + email + \"')\";\nreturn [{\n  json: {\n    eventId: eventId,\n    firstName: b.firstName,\n    lastName: b.lastName,\n    email: email,\n    phone: digitsOnly,\n    state: b.state,\n    qualified: Boolean(b.qualified),\n    restrictedState: Boolean(b.restrictedState),\n    capiSent: Boolean(b.capiOk),\n    utmSource: safeUtm.utm_source || '',\n    utmMedium: safeUtm.utm_medium || '',\n    utmCampaign: safeUtm.utm_campaign || '',\n    landingUrl: b.landingUrl || '',\n    submittedAt: b.submittedAt || new Date().toISOString(),\n    rawPayload: JSON.stringify(b),\n    searchFormula: searchFormula,\n  },\n}];"
+      },
+      "id": "f04446c7-5d39-49e9-b0e4-ead4327d84d3",
       "name": "Validate & Normalize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [80, -140],
-      "notes": "Fails loudly (throws) on bad input instead of silently passing along a half-formed record — the error then routes to the Error Trigger workflow.",
-      "parameters": {
-        "jsCode": "const b = $input.first().json.body;\nconst required = ['eventId', 'email', 'phone', 'firstName', 'lastName', 'state'];\nconst missing = required.filter((f) => !b[f]);\nif (missing.length) {\n  throw new Error(`Missing fields from webhook payload: ${missing.join(', ')}`);\n}\n\nconst digitsOnly = String(b.phone).replace(/\\D/g, '');\n\nreturn [{\n  json: {\n    eventId: b.eventId,\n    firstName: b.firstName,\n    lastName: b.lastName,\n    email: String(b.email).trim().toLowerCase(),\n    phone: digitsOnly,\n    state: b.state,\n    qualified: Boolean(b.qualified),\n    restrictedState: Boolean(b.restrictedState),\n    capiSent: Boolean(b.capiOk),\n    utmSource: b.utm?.utm_source || '',\n    utmMedium: b.utm?.utm_medium || '',\n    utmCampaign: b.utm?.utm_campaign || '',\n    landingUrl: b.landingUrl || '',\n    submittedAt: b.submittedAt || new Date().toISOString(),\n    rawPayload: JSON.stringify(b),\n  },\n}];"
-      }
+      "position": [
+        0,
+        -160
+      ]
     },
     {
-      "id": "search-existing",
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "mode": "id",
+          "value": "appykHkMnMJUMid2h"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tblEGFx9r8k969UCp"
+        },
+        "filterByFormula": "={{ $json.searchFormula }}",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      },
+      "id": "ca977793-773c-408e-8587-4903febed16f",
       "name": "Search Existing Lead",
       "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [320, -140],
-      "parameters": {
-        "operation": "search",
-        "base": { "value": "={{ $env.AIRTABLE_BASE_ID }}" },
-        "table": { "value": "Leads" },
-        "filterByFormula": "={{ \"OR({Event ID} = '\" + $json.eventId + \"', {Email} = '\" + $json.email + \"')\" }}",
-        "options": { "limit": 1 }
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        -160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Z7SQdwfOH9HddP2O",
+          "name": "Airtable account"
+        }
       }
     },
     {
-      "id": "existing-found",
-      "name": "Existing Record?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [560, -140],
       "parameters": {
         "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
           "conditions": [
             {
               "leftValue": "={{ $json.id }}",
-              "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty" }
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "89e71c92-a398-43b8-9b80-25ed8ab4cd6e"
             }
-          ]
-        }
-      }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6a7d227d-1c2e-465e-b887-c95f6ce91f15",
+      "name": "Existing Record?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        -160
+      ]
     },
     {
-      "id": "update-lead",
-      "name": "Update Lead (dedup)",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [800, -260],
-      "notes": "Same eventId/email seen again — increments Touch Count instead of creating a duplicate row. This is the dedup guarantee at the database layer, matching the eventId-based dedup already happening on the Meta side.",
       "parameters": {
+        "authentication": "airtableOAuth2Api",
         "operation": "update",
-        "base": { "value": "={{ $env.AIRTABLE_BASE_ID }}" },
-        "table": { "value": "Leads" },
-        "id": "={{ $json.id }}",
+        "base": {
+          "__rl": true,
+          "mode": "id",
+          "value": "appykHkMnMJUMid2h"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tblEGFx9r8k969UCp"
+        },
         "columns": {
+          "mappingMode": "defineBelow",
           "value": {
             "Touch Count": "={{ ($json['Touch Count'] || 1) + 1 }}",
             "Meta CAPI Sent": "={{ $('Validate & Normalize').item.json.capiSent }}"
-          }
-        }
-      }
-    },
-    {
-      "id": "create-lead",
-      "name": "Create Lead",
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Event ID",
+              "displayName": "Event ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "State",
+              "displayName": "State",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Qualified",
+              "displayName": "Qualified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Restricted State",
+              "displayName": "Restricted State",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Review Status",
+              "displayName": "Review Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Auto-Routed",
+                  "value": "Auto-Routed"
+                },
+                {
+                  "name": "Needs Manual Review",
+                  "value": "Needs Manual Review"
+                },
+                {
+                  "name": "Contacted",
+                  "value": "Contacted"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Meta CAPI Sent",
+              "displayName": "Meta CAPI Sent",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Source",
+              "displayName": "UTM Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Medium",
+              "displayName": "UTM Medium",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Campaign",
+              "displayName": "UTM Campaign",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Landing URL",
+              "displayName": "Landing URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Submitted At",
+              "displayName": "Submitted At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Touch Count",
+              "displayName": "Touch Count",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Raw Payload",
+              "displayName": "Raw Payload",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6a2a885a-3954-4529-bb79-24fee673c476",
+      "name": "Update Lead (dedup)",
       "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [800, -40],
-      "parameters": {
-        "operation": "create",
-        "base": { "value": "={{ $env.AIRTABLE_BASE_ID }}" },
-        "table": { "value": "Leads" },
-        "columns": {
-          "value": {
-            "Event ID": "={{ $json.eventId }}",
-            "First Name": "={{ $json.firstName }}",
-            "Last Name": "={{ $json.lastName }}",
-            "Email": "={{ $json.email }}",
-            "Phone": "={{ $json.phone }}",
-            "State": "={{ $json.state }}",
-            "Qualified": "={{ $json.qualified }}",
-            "Restricted State": "={{ $json.restrictedState }}",
-            "Review Status": "={{ $json.restrictedState ? 'Needs Manual Review' : 'Auto-Routed' }}",
-            "Meta CAPI Sent": "={{ $json.capiSent }}",
-            "UTM Source": "={{ $json.utmSource }}",
-            "UTM Medium": "={{ $json.utmMedium }}",
-            "UTM Campaign": "={{ $json.utmCampaign }}",
-            "Landing URL": "={{ $json.landingUrl }}",
-            "Submitted At": "={{ $json.submittedAt }}",
-            "Touch Count": 1,
-            "Raw Payload": "={{ $json.rawPayload }}"
-          }
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -256
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Z7SQdwfOH9HddP2O",
+          "name": "Airtable account"
         }
       }
     },
     {
-      "id": "respond-ok",
-      "name": "Respond 200",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1040, -140],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { \"ok\": true } }}",
-        "options": { "responseCode": 200 }
+        "responseBody": {
+          "ok": true
+        },
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "46de14f6-0a0d-4805-987d-2c8262811583",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        992,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "mode": "id",
+          "value": "appykHkMnMJUMid2h"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "id",
+          "value": "tblEGFx9r8k969UCp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Event ID": "={{ $('Validate & Normalize').item.json.eventId }}",
+            "First Name": "={{ $('Validate & Normalize').item.json.firstName }}",
+            "Last Name": "={{ $('Validate & Normalize').item.json.lastName }}",
+            "Email": "={{ $('Validate & Normalize').item.json.email }}",
+            "Phone": "={{ $('Validate & Normalize').item.json.phone }}",
+            "State": "={{ $('Validate & Normalize').item.json.state }}",
+            "Qualified": "={{ $('Validate & Normalize').item.json.qualified }}",
+            "Restricted State": "={{ $('Validate & Normalize').item.json.restrictedState }}",
+            "Review Status": "={{ $('Validate & Normalize').item.json.restrictedState ? 'Needs Manual Review' : 'Auto-Routed' }}",
+            "Meta CAPI Sent": "={{ $('Validate & Normalize').item.json.capiSent }}",
+            "UTM Source": "={{ $('Validate & Normalize').item.json.utmSource }}",
+            "UTM Medium": "={{ $('Validate & Normalize').item.json.utmMedium }}",
+            "UTM Campaign": "={{ $('Validate & Normalize').item.json.utmCampaign }}",
+            "Landing URL": "={{ $('Validate & Normalize').item.json.landingUrl }}",
+            "Submitted At": "={{ $('Validate & Normalize').item.json.submittedAt }}",
+            "Touch Count": 1,
+            "Raw Payload": "={{ $('Validate & Normalize').item.json.rawPayload }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Event ID",
+              "displayName": "Event ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "State",
+              "displayName": "State",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Qualified",
+              "displayName": "Qualified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Restricted State",
+              "displayName": "Restricted State",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Review Status",
+              "displayName": "Review Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Auto-Routed",
+                  "value": "Auto-Routed"
+                },
+                {
+                  "name": "Needs Manual Review",
+                  "value": "Needs Manual Review"
+                },
+                {
+                  "name": "Contacted",
+                  "value": "Contacted"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Meta CAPI Sent",
+              "displayName": "Meta CAPI Sent",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Source",
+              "displayName": "UTM Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Medium",
+              "displayName": "UTM Medium",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UTM Campaign",
+              "displayName": "UTM Campaign",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Landing URL",
+              "displayName": "Landing URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Submitted At",
+              "displayName": "Submitted At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Touch Count",
+              "displayName": "Touch Count",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Raw Payload",
+              "displayName": "Raw Payload",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b726322a-8cd3-4c8c-9335-d15ea65260a6",
+      "name": "Create Lead",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -48
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Z7SQdwfOH9HddP2O",
+          "name": "Airtable account"
+        }
       }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": {
+          "error": "unauthorized"
+        },
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "efa14255-cce4-473e-aa64-e061ead49af4",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        160
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook: Lead Intake": {
-      "main": [[{ "node": "Check Webhook Secret", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Check Webhook Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check Webhook Secret": {
       "main": [
-        [{ "node": "Validate & Normalize", "type": "main", "index": 0 }],
-        [{ "node": "Respond 401", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Validate & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Validate & Normalize": {
-      "main": [[{ "node": "Search Existing Lead", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Search Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Search Existing Lead": {
-      "main": [[{ "node": "Existing Record?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Existing Record?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Existing Record?": {
       "main": [
-        [{ "node": "Update Lead (dedup)", "type": "main", "index": 0 }],
-        [{ "node": "Create Lead", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Update Lead (dedup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Update Lead (dedup)": {
-      "main": [[{ "node": "Respond 200", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Create Lead": {
-      "main": [[{ "node": "Respond 200", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "errorWorkflow": "LexHive – Automation Error Handler",
-    "saveManualExecutions": true
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "errorWorkflow": "BrB0SlTtkfc9FiXu"
   },
-  "active": false
+  "versionId": "851a9fd9-c9b4-4b36-8f49-ec4c28b94548",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b5e78a3a7e69fc3695b1b90c35f4b3b268f45130475fc1a75a5eaebbc014313"
+  },
+  "nodeGroups": [],
+  "id": "qmPX8jbS3Qn3Qvml",
+  "tags": []
 }
